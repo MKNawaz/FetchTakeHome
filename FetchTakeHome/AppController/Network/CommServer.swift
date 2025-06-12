@@ -11,7 +11,6 @@ protocol CommServerServices {
     func getData(urlString: String) async throws -> Data
     
     // Post will also be implented here
-    // becuase there is no
     // func postData(urlString: String) async throws -> Data
 }
 
@@ -24,7 +23,7 @@ class CommServer: CommServerServices {
   
     // session will handle the user token
     // and use it will all calls
-    // correct session will be injected on success login
+    // correct session will be injected on successful login
     // auth calls will have their own implemention
     let session: URLSession
     

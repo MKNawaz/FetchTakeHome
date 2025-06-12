@@ -6,6 +6,7 @@
 //
 
 import XCTest
+@testable import FetchTakeHome
 
 final class ReceipsMainScreenViewViewModelTests: XCTestCase {
 
@@ -17,19 +18,65 @@ final class ReceipsMainScreenViewViewModelTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
+    class MockAppController: AppControllerServices {
+           var mockRecipes: [RecipeModel] = []
+           var mockImage: UIImage? = UIImage(systemName: "photo")
 
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
+           func getReceipties() async -> [RecipeModel] {
+               return mockRecipes
+           }
+
+           func getImage(for urlString: String) async -> UIImage? {
+               return mockImage
+           }
+       }
+
+       func testFetchReceipts_PopulatesRecipesAndImages() async {
+           // Arrange
+           let mockController = MockAppController()
+           mockController.mockRecipes = [
+               RecipeModel(
+                   id: "id-1",
+                   cuisine: "Italian",
+                   name: "Pizza",
+                   photoUrlSmall: "https://example.com/small.jpg",
+                   photoUrlLarge: "https://example.com/large.jpg",
+                   sourceUrl: "",
+                   youtubeUrl: ""
+               )
+           ]
+
+           let viewModel = ReceipsMainScreenView.ViewModel(appController: mockController)
+
+           // Act
+           await viewModel.fetchReceipts()
+           
+           // wait for the task to execute
+           sleep(1)
+
+           // Assert
+           XCTAssertEqual(viewModel.recepies.count, 1)
+           XCTAssertEqual(viewModel.recepies.first?.name, "Pizza")
+           XCTAssertEqual(viewModel.recipeImages["id-1"], mockController.mockImage)
+       }
+
+       func testFilteredRecepies_ByCuisine() {
+           // Arrange
+           let mockController = MockAppController()
+           let viewModel = ReceipsMainScreenView.ViewModel(appController: mockController)
+
+           viewModel.recepies = [
+            RecipeModel(id: "1", cuisine: "Mexican", name: "Taco", photoUrlSmall: "", photoUrlLarge: "", sourceUrl: "", youtubeUrl: ""),
+            RecipeModel(id: "2", cuisine: "Italian", name: "Pasta", photoUrlSmall: "", photoUrlLarge: "", sourceUrl: "", youtubeUrl: "")
+           ]
+           viewModel.selectedCuisine = "Italian"
+
+           // Act
+           let filtered = viewModel.filteredRecepies
+
+           // Assert
+           XCTAssertEqual(filtered.count, 1)
+           XCTAssertEqual(filtered.first?.name, "Pasta")
+       }
 
 }
